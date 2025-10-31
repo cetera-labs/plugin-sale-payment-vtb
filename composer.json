@@ -1,0 +1,30 @@
+{
+    "name": "cetera-labs/plugin-sale-payment-vtb",
+    "description": "VTB for E-Commerce Plugin",
+    "type": "cetera-cms-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Roman Romanov",
+            "email": "nicodim@mail.ru",
+            "role": "Lead Developer"
+        }
+    ],
+    "require": {
+        "cetera-labs/plugin-sale": "*"
+    },
+    
+    "minimum-stability": "dev",
+    
+    "autoload": {
+        "psr-0": { 
+	        "SalePaymentVTB\\": "classes/"
+	    }
+    },
+
+    "extra": {
+        "name": "sale-payment-vtb",
+        "title": "VTB for E-Commerce",
+        "description": ""
+    }
+}
