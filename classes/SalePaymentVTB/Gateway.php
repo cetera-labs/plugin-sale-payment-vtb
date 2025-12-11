@@ -1,10 +1,9 @@
 <?php
 namespace SalePaymentVTB;
-
 class Gateway extends \Sale\PaymentGateway\GatewayAtol
 {
-    const GATEWAY_PRODUCTION = "https://pay.raif.ru";
-    const GATEWAY_TEST = " https://hackaton.bankingapi.ru/api/smb/efcp/e-commerce/api/";
+    const GATEWAY_PRODUCTION = "https://gw.api.vtb.ru/openapi/smb/efcp/e-commerce/api";
+    const GATEWAY_TEST = "https://hackaton.bankingapi.ru/api/smb/efcp/e-commerce/api";
 
     public static function getInfo2()
     {
@@ -65,7 +64,7 @@ class Gateway extends \Sale\PaymentGateway\GatewayAtol
         }
         try {
             $json = [
-                "orderId" => $this->order->id,
+                "orderId" => (string)$this->order->id,
                 "orderName" => "Заказ " . $this->order->id,
                 "customer" => [
                     "email" => $this->order->getEmail(),
@@ -86,12 +85,15 @@ class Gateway extends \Sale\PaymentGateway\GatewayAtol
             }
             $token = $this->getAccessToken($this->params["client_id"],$this->params["secretKey"]);
             $client = new \GuzzleHttp\Client();
-            $response = $client->request("POST", $url . "/v1/orders/", [
+            $fullUrl = rtrim($url, '/') . '/v1/orders';
+            $headers = [
+                "Authorization" => "Bearer " . $token,
+                "X-IBM-Client-Id" => $this->params["client_id"],
+                "Content-Type" => "application/json",
+            ];
+            $response = $client->request("POST", $fullUrl, [
                 "json" => $json,
-                "headers" => [
-                    "Authorization" => "Bearer " . $token,
-                    "X-IBM-Client-Id" =>$this->params["client_id"],
-                ],
+                "headers" => $headers,
             ]);
 
             $res = json_decode($response->getBody(), true);
@@ -100,7 +102,7 @@ class Gateway extends \Sale\PaymentGateway\GatewayAtol
             $payUrl = $res["object"]["payUrl"];
 
             if (
-                isset($payUrlt) &&
+                isset($payUrl) &&
                 !empty($payUrl) &&
                 isset($amount) &&
                 !empty($amount)
@@ -179,13 +181,12 @@ class Gateway extends \Sale\PaymentGateway\GatewayAtol
     {
         try {
             $refundId = "refund" . $this->order->id;
+            $application = \Cetera\Application::getInstance();
             $application->connectDb();
-            $paymentId = $application
-                ->getDbConnection()
-                ->fetchColumn(
-                    "SELECT transaction_id FROM sale_payment_transactions WHERE order_id=?",
-                    [$this->order->id]
-                );
+            $paymentId = $application->getDbConnection()->fetchColumn(
+                "SELECT transaction_id FROM sale_payment_transactions WHERE order_id=?",
+                [$this->order->id]
+            );
             $params = [
                 "refundId" => $refundId,
                 "paymentId" => $paymentId,
@@ -194,39 +195,39 @@ class Gateway extends \Sale\PaymentGateway\GatewayAtol
                     "code" => "RUB",
                 ],
             ];
+
             if ($items !== null) {
                 $amount = 0;
-                foreach ($items as $key => $item) {
-                    if ($item["quantity_refund"] <= 0) {
+                foreach ($items as $item) {
+                    if (empty($item["quantity_refund"]) || $item["quantity_refund"] <= 0) {
                         continue;
                     }
-                    $amount +=
-                        intval($item["quantity_refund"]) * $item["price"];
+                    $amount += intval($item["quantity_refund"]) * $item["price"];
                 }
                 $params["amount"]["value"] = $amount;
             }
 
-            //print_r($params);
-            //return;
-
             if (getenv("RUN_MODE", true) === "development") {
                 $url = self::GATEWAY_TEST;
             } else {
-                $url =
-                    isset($this->params["test_mode"]) &&
-                    $this->params["test_mode"]
-                        ? self::GATEWAY_TEST
-                        : self::GATEWAY_PRODUCTION;
+                $url = !empty($this->params["test_mode"])
+                    ? self::GATEWAY_TEST
+                    : self::GATEWAY_PRODUCTION;
             }
-            $token = $this->getAccessToken($this->params["client_id"],$this->params["secretKey"]);
+
+            $token = $this->getAccessToken($this->params["client_id"], $this->params["secretKey"]);
+
+            $fullUrl = rtrim(trim($url), '/') . '/v1/refunds';
+            $headers = [
+                "Authorization" => "Bearer " . $token,
+                "X-IBM-Client-Id" => $this->params["client_id"],
+                "Content-Type" => "application/json",
+            ];
+
             $client = new \GuzzleHttp\Client();
-            $response = $client->request("POST", $url . "/v1/refunds", [
-                "verify" => false,
+            $response = $client->request("POST", $fullUrl, [
                 "json" => $params,
-                "headers" => [
-                    "Authorization" => "Bearer " . $token,
-                    "X-IBM-Client-Id" =>$this->params["client_id"],
-                ],
+                "headers" => $headers,
             ]);
 
             $res = json_decode($response->getBody(), true);
