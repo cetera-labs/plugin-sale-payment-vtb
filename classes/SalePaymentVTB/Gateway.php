@@ -187,6 +187,9 @@ class Gateway extends \Sale\PaymentGateway\GatewayAtol
                 "SELECT transaction_id FROM sale_payment_transactions WHERE order_id=?",
                 [$this->order->id]
             );
+            if (!$paymentId) {
+                throw new \Exception("Не найдено записей в БД для заказа " . $this->order->id);
+            }
             $params = [
                 "refundId" => $refundId,
                 "paymentId" => $paymentId,
