@@ -16,7 +16,7 @@ try {
     file_put_contents(
         $_SERVER["DOCUMENT_ROOT"] . "/uploads/logs/vtb.log",
         date("Y.m.d H:i:s") .
-              print_r($requestBody).
+              print_r($requestBody, true) .
               "\n",
         FILE_APPEND
     );
