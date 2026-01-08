@@ -18,7 +18,7 @@ try {
 
     if ($requestBody["type"] == "PAYMENT") {
         $gateway->saveTransaction(
-            $requestBody["object"]["orderId"],
+            $requestBody["object"]["paymentId"],
             $requestBody
         );
         if ($requestBody["object"]["status"]["value"] == "CONFIRMED") {
