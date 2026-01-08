@@ -55,6 +55,14 @@ try {
         "HTTP/1.1 500 " . trim(preg_replace("/\s+/", " ", $e->getMessage()))
     );
     print $e->getMessage();
+    file_put_contents(
+        $_SERVER["DOCUMENT_ROOT"] . "/uploads/logs/vtb.log",
+        date("Y.m.d H:i:s") .
+        $e->getMessage() .
+        "\n",
+        FILE_APPEND
+    );
+}
 }
 
 /*$data = ob_get_contents();
