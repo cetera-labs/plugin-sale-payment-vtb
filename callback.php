@@ -13,7 +13,13 @@ try {
 
     print_r($requestBody);
     print_r($headers);
-
+    file_put_contents(
+        $_SERVER["DOCUMENT_ROOT"] . "/uploads/logs/vtb.log",
+        date("Y.m.d H:i:s") .
+              print_r($requestBody).
+              "\n",
+        FILE_APPEND
+    );
     $order = \Sale\Order::getById($requestBody["transaction"]["orderId"]);
     $gateway = $order->getPaymentGateway();
 
@@ -59,6 +65,7 @@ try {
         $_SERVER["DOCUMENT_ROOT"] . "/uploads/logs/vtb.log",
         date("Y.m.d H:i:s") .
                        $e->getMessage() .
+                       $e->getLine() .
                         "\n",
         FILE_APPEND
                 );
