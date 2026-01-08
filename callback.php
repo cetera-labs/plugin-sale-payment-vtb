@@ -13,14 +13,7 @@ try {
 
     print_r($requestBody);
     print_r($headers);
-    file_put_contents(
-        $_SERVER["DOCUMENT_ROOT"] . "/uploads/logs/vtb.log",
-        date("Y.m.d H:i:s") .
-              print_r($requestBody, true) .
-              "\n",
-        FILE_APPEND
-    );
-    $order = \Sale\Order::getById($requestBody["transaction"]["orderId"]);
+    $order = \Sale\Order::getById($requestBody["object"]["orderId"]);
     $gateway = $order->getPaymentGateway();
 
     if ($requestBody["type"] == "PAYMENT") {
