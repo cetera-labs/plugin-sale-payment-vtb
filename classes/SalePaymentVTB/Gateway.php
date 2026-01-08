@@ -183,13 +183,21 @@ class Gateway extends \Sale\PaymentGateway\GatewayAtol
             $refundId = "refund" . $this->order->id;
             $application = \Cetera\Application::getInstance();
             $application->connectDb();
-            $paymentId = $application->getDbConnection()->fetchColumn(
+            $orderIds = $application->getDbConnection()->fetchAll(
                 "SELECT transaction_id FROM sale_payment_transactions WHERE order_id=?",
                 [$this->order->id]
             );
             if (!$paymentId) {
                 throw new \Exception("Не найдено записей в БД для заказа " . $this->order->id);
             }
+            foreach ($orderIds as $row) {
+                $tid = $row['transaction_id'];
+                if (!ctype_digit((string)$tid)) {
+                    $paymentId = $tid;
+                    break;
+                }
+            }
+
             $params = [
                 "refundId" => $refundId,
                 "paymentId" => $paymentId,
@@ -198,7 +206,13 @@ class Gateway extends \Sale\PaymentGateway\GatewayAtol
                     "code" => "RUB",
                 ],
             ];
-
+            file_put_contents(
+                    $_SERVER["DOCUMENT_ROOT"] . "/uploads/logs/vtb.log",
+                    date("Y.m.d H:i:s") .
+                        print_r($params,true) .
+                        "\n",
+                    FILE_APPEND
+                );
             if ($items !== null) {
                 $amount = 0;
                 foreach ($items as $item) {
