@@ -203,13 +203,13 @@ class Gateway extends \Sale\PaymentGateway\GatewayAtol
                     "code" => "RUB",
                 ],
             ];
-            file_put_contents(
+           /* file_put_contents(
                     $_SERVER["DOCUMENT_ROOT"] . "/uploads/logs/vtb.log",
                     date("Y.m.d H:i:s") .
                         print_r($params,true) .
                         "\n",
                     FILE_APPEND
-                );
+                );*/
             if ($items !== null) {
                 $amount = 0;
                 foreach ($items as $item) {
