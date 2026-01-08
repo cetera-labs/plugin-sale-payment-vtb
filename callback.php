@@ -58,6 +58,7 @@ try {
         $_SERVER["DOCUMENT_ROOT"] . "/uploads/logs/vtb.log",
         date("Y.m.d H:i:s") .
                        $e->getMessage() .
+                       $e->getFile() .
                        $e->getLine() .
                         "\n",
         FILE_APPEND
